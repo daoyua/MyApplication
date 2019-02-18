@@ -17,7 +17,10 @@ public class MyTestView extends View {
 //        mHolder.addCallback(this);
     }
     public float left, top, width, height;
-    float bei=3.50f;
+    public float bei=3.50f;
+    public void setBei(float f){
+        bei=f;
+    }
     public void setView(float lefts, float tops, float widths, float heights) {
         left = lefts*bei;
         top = tops*bei;
