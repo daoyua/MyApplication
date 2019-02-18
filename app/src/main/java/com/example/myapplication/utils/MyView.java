@@ -6,10 +6,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MyView extends SurfaceView implements SurfaceHolder.Callback {
@@ -47,34 +49,39 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
      * "rotation": 2
      */
     public float left, top, width, height;
+    private List<Integer> mWaitAction = new LinkedList<>(); //暂存拍照的队列
+    public boolean isTaking = false;   //是否处于拍照中
 
-    public void drawMyView(float left, float top, float width, float height) {
-        left = left;
-        top = top;
-        width = width;
-        height = height;
-
+    public Camera mCamera;
+    boolean fag=true;
+    public void startPreviews(){
+        mCamera.startPreview();
     }
-
-    private Camera mCamera;
 public void takePicture(Camera.PictureCallback pictureCallback){
-    mCamera.takePicture(null,null,null,pictureCallback);
-}
+    if (isTaking) {   //判断是否处于拍照，如果正在拍照，则将请求放入缓存队列
+//        mWaitAction.add(1);
+    } else {
+        doTakeAction(pictureCallback);
+    }}
+
+
+
+
+
+    private void doTakeAction(Camera.PictureCallback pictureCallback) {
+        isTaking = true;
+        mCamera.takePicture(null, null, pictureCallback);
+    }
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         try {
-            int i = FindFrontCamera();
-            mCamera = Camera.open(i);
-            if (mCamera == null) {
-                return;
-            }
+           openCamera();
             mCamera.setDisplayOrientation(90);
             // 设置holder主要是用于surfaceView的图片的实时预览，以及获取图片等功能，可以理解为控制camera的操作..
             mCamera.setPreviewDisplay(holder);
             setCameraParms();
 //            mCamera.setPreviewCallback(this);
             mCamera.startPreview();
-
             mCamera.cancelAutoFocus();
             requestLayout();
         } catch (IOException e) { // TODO Auto-generated catch block
@@ -114,12 +121,36 @@ public void takePicture(Camera.PictureCallback pictureCallback){
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        if (mHolder.getSurface() == null) {
+            // preview surface does not exist
+            return;
+        }
+        // stop preview before making changes
+        try {
+            mCamera.stopPreview();
+        } catch (Exception e) {
+            // ignore: tried to stop a non-existent preview
+        }
 
+        // set preview size and make any resize, rotate or
+        // reformatting changes here
+        // start preview with new settings
+        try {
+            mCamera.setPreviewDisplay(mHolder);
+            mCamera.startPreview();
+        } catch (Exception e) {
+            Log.d("tag", "Error starting camera preview: " + e.getMessage());
+        }
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+        if (mCamera != null) {
 
+// Call stopPreview() to stop updating the preview surface.
+
+            mCamera.stopPreview();
+        }
     }
 
     public static Camera.Size pictureSize;
@@ -158,7 +189,25 @@ public void takePicture(Camera.PictureCallback pictureCallback){
         myParam.setJpegQuality(70);
         mCamera.setParameters(myParam);
     }
+    public void releaseCamera(){
+        if(mCamera!=null){
+            mCamera.release();
+            mCamera=null;
+        }
 
+    }
+    public void resetStart(){
+        releaseCamera();
+        openCamera();
+//        mCamera.startPreview();
+    }
+   public void  openCamera(){
+       int i = FindFrontCamera();
+       mCamera = Camera.open(i);
+       if (mCamera == null) {
+           return;
+       }
+   }
     // 根据摄像头的获取与屏幕分辨率最为接近的一个分辨率
     private Camera.Size getPictureMaxSize(List<Camera.Size> l, Camera.Size size) {
         Camera.Size s = null;

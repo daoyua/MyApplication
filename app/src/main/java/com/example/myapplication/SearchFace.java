@@ -282,7 +282,7 @@ public class SearchFace {
                  */
 
                 private String type;
-                private int probability;
+                private float probability;
 
                 public String getType() {
                     return type;
@@ -292,11 +292,11 @@ public class SearchFace {
                     this.type = type;
                 }
 
-                public int getProbability() {
+                public float getProbability() {
                     return probability;
                 }
 
-                public void setProbability(int probability) {
+                public void setProbability(float probability) {
                     this.probability = probability;
                 }
             }

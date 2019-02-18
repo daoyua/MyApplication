@@ -15,7 +15,7 @@ public class FaceMatch {
      * https://ai.baidu.com/file/470B3ACCA3FE43788B5A963BF0B625F3
      * 下载
      */
-    public static String match(String token,String code) {
+    public static String match(String token,String facetoken,String code) {
         // 请求url
         String url = "https://aip.baidubce.com/rest/2.0/face/v3/match";
         try {
@@ -28,7 +28,7 @@ public class FaceMatch {
             List<Map<String, Object>> images = new ArrayList<>();
 
             Map<String, Object> map1 = new HashMap<>();
-            map1.put("image", "a2be55b56c274334b8ad655b75752520");
+            map1.put("image", facetoken);
             map1.put("image_type", "FACE_TOKEN");
             map1.put("face_type", "LIVE");
             map1.put("quality_control", "LOW");
