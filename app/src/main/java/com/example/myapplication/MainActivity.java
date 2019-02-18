@@ -1,7 +1,9 @@
 package com.example.myapplication;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -11,6 +13,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Timer timer;
     private TimerTask task;
     private Button bt_takephoto;
+    private SharedPreferences sp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bt_takephoto = findViewById(R.id.bt_takephoto);
         bt_takephoto.setOnClickListener(this);
         findViewById(R.id.bt_takephoto_once).setOnClickListener(this);
+        sp = getSharedPreferences("message",Context.MODE_PRIVATE);
 //        startTime();
 
     }
@@ -90,14 +95,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
     String facetoken = "";
     StringBuilder result = new StringBuilder();
-
+    String token;
+    boolean isFirstToken =true;
     public void postImage() {
         new Thread(new Runnable() {
 
             @Override
             public void run() {
                 result.delete(0, result.length());
-                String token = AuthService.getAuth();
+
+                if(isFirstToken){//每次进入第一次获取token
+                    token = AuthService.getAuth();
+                    isFirstToken=false;
+                    sp.edit().putString("token",token).commit();
+                }else{
+
+                    token= sp.getString("token","");
+                    if(TextUtils.isEmpty(token)){
+                        token = AuthService.getAuth();
+                        sp.edit().putString("token",token).commit();
+                    }
+                }
+
+
+
                 String json = FaceDetect.detect(token, encode);
                 String json1 = FaceMatch.match(token, facetoken, encode);
                 result.append("检测人脸：\n" + json + "\n" + "对比人脸：\n" + json1);
